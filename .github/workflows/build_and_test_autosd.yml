@@ -93,7 +93,7 @@ jobs:
       - name: Build AutoSD Bootc Deployment
         run: |
           export IMG_NAMESPACE=${{ github.repository_owner }}/score-autosd-bootc
-          export IMG_TAG=pr-${{ github.event.pull_request.number }}-${{ github.sha }}-$(arch)
+          export IMG_TAG=pr-${{ github.event.pull_request.number }}-$(git rev-parse --short HEAD)-$(arch)
           podman build --build-arg SCORE_RELASE=latest -t ghcr.io/${IMG_NAMESPACE}:${IMG_TAG} .
         working-directory: ./images/autosd_x86_64/build
 
