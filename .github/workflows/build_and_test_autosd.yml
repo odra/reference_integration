@@ -73,11 +73,19 @@ jobs:
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
-          gh run list \
+          RUN_ID=$(gh run list \
           --workflow autosd_build_and_publish.yml \
           --repo eclipse-score/os_images \
           --status success \
-          --limit 1
+          --limit 1 \
+          --jq '.[0].databaseId')
+
+          echo "Using Workflow Run ID: $RUN_ID"
+
+          gh run view $RUN_ID \
+          --repo eclipse-score/os_images \
+          --json artifacts \
+          --jq '.artifacts[].name'
 
       - name: Build AutoSD Bootc Deployment
         run: |
