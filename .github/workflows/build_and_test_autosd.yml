@@ -28,6 +28,9 @@ jobs:
   build:
     name: x86_64
     runs-on: ubuntu-latest
+    permissions:
+      packages: write
+      contents: read
 
     steps:
       - name: Clean disk space
@@ -65,26 +68,27 @@ jobs:
           curl -o auto-image-builder.sh "https://gitlab.com/CentOS/automotive/src/automotive-image-builder/-/raw/main/auto-image-builder.sh?ref_type=heads"
           chmod +x auto-image-builder.sh
         working-directory: ./images/autosd_x86_64/build
- 
-      - name: Build AutoSD QEMU (x86_64)
+
+      - name: Pull AutoSD Bootc Image
         run: |
-          export AIB_LOCAL_CONTAINER_STORAGE=$PWD/_build/containers-storage
+          curl https://github.com/eclipse-score/os_images/actions/runs/22435516853/artifacts/5669287849 | podman image load  
 
-          mkdir -p _build/containers-storage
-          sudo -E ./auto-image-builder.sh build-builder --distro=autosd10-sig
+     - name: Build AutoSD Bootc Deployment
+       run: |
+         export IMG_NAMESPACE=${{ github.repository_owner }}/score-autosd-bootc
+         export IMG_TAG=pr-${{ github.event.pull_request.number }}-${{ github.sha }}-$(arch)
+
+         podman build --build-arg SCORE_RELASE=latest -t ghcr.io/${IMG_NAMESPACE}:${IMG_TAG} .
+       working-directory: ./images/autosd_x86_64/build
+
+      - name: Push Container Image
+	run: |
+          export IMG_NAMESPACE=${{ github.repository_owner }}/score-autosd-bootc
+          export IMG_TAG=pr-${{ github.event.pull_request.number }}-${{ github.sha }}-$(arch)
+
+       	  echo "${{ secrets.GITHUB_TOKEN }}" | podman login ghcr.io -u ${{ github.actor }} --password-stdin
           
-          sudo -E ./auto-image-builder.sh build \
-          --distro=autosd10-sig  \
-          --target=qemu \
-          --define-file vars.yml \
-          --define-file vars-devel.yml \
-          image.aib.yml \
-          localhost/score:latest
-
-          sudo -E ./auto-image-builder.sh to-disk-image localhost/score:latest _build/disk.qcow2
-
-          sudo chown $(id -u):$(id -u) _build/disk.qcow2
-        working-directory: ./images/autosd_x86_64/build
+          podman push ghcr.io/${IMG_NAMESPACE}:${IMG_TAG}
 
       - name: Enable KVM group perms
         run: |

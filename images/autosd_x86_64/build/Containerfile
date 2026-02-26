@@ -1,0 +1,9 @@
+ARG SCORE_RELEASE=latest
+
+FROM localhost/score:${SCORE_RELEASE}
+
+RUN mkdir -p /usr/share/score/examples
+
+COPY files/showcases_all/ /usr/share/score/examples/
+
+RUN chmod +x /usr/share/score/examples//showcases_all/bin/*
