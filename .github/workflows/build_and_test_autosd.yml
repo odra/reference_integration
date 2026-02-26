@@ -92,25 +92,37 @@ jobs:
 
       - name: Build AutoSD Bootc Deployment
         run: |
+          if [ "$(arch)" = "x86_64" ]; then
+            OCI_ARCH=amd64
+          else
+            OCI_ARCH=arm64
+          fi
+
           export IMG_NAMESPACE=${{ github.repository_owner }}/score-autosd-bootc
-          export IMG_TAG=pr-${{ github.event.pull_request.number }}-$(git rev-parse --short HEAD)-$(arch)
+          export IMG_TAG=pr-${{ github.event.pull_request.number }}-$(git rev-parse --short HEAD)-$OCI_ARCH
           podman build --build-arg SCORE_RELASE=latest -t ghcr.io/${IMG_NAMESPACE}:${IMG_TAG} .
         working-directory: ./images/autosd_x86_64/build
 
       - name: Push Container Image
         run: |
+          if [ "$(arch)" = "x86_64" ]; then
+            OCI_ARCH=amd64
+          else
+            OCI_ARCH=arm64
+          fi
+
           export IMG_NAMESPACE=${{ github.repository_owner }}/score-autosd-bootc
-          export IMG_TAG=pr-${{ github.event.pull_request.number }}-$(git rev-parse --short HEAD)-$(arch)
+          export IMG_TAG=pr-${{ github.event.pull_request.number }}-$(git rev-parse --short HEAD)-$OCI_ARCH
 
           echo "${{ secrets.GITHUB_TOKEN }}" | podman login ghcr.io -u ${{ github.actor }} --password-stdin
           
           podman push ghcr.io/${IMG_NAMESPACE}:${IMG_TAG}
 
-      # - name: Enable KVM group perms
-      #   run: |
-      #     echo 'KERNEL=="kvm", GROUP="kvm", MODE="0666", OPTIONS+="static_node=kvm"' | sudo tee /etc/udev/rules.d/99-kvm4all.rules
-      #     sudo udevadm control --reload-rules
-      #     sudo udevadm trigger --name-match=kvm
+      - name: Enable KVM group perms
+        run: |
+          echo 'KERNEL=="kvm", GROUP="kvm", MODE="0666", OPTIONS+="static_node=kvm"' | sudo tee /etc/udev/rules.d/99-kvm4all.rules
+          sudo udevadm control --reload-rules
+          sudo udevadm trigger --name-match=kvm
     
       # - name: Test QEMU image
       #   run: |
