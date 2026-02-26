@@ -90,6 +90,13 @@ jobs:
 
           podman images
 
+      - name: Build Bootc Builder (tmp)
+        run: |
+          # mkdir -p _build/continer-storage
+          export AIB_LOCAL_CONTAINER_STORAGE=/var/lib/containers/storage
+
+          ./auto-image-builder.sh build-builder  --distro autosd10-sig
+
       - name: Build AutoSD Bootc Deployment
         run: |
           if [ "$(arch)" = "x86_64" ]; then
@@ -100,9 +107,8 @@ jobs:
 
           export IMG_NAMESPACE=${{ github.repository_owner }}/score-autosd-bootc
           export IMG_TAG=pr-${{ github.event.pull_request.number }}-$(git rev-parse --short HEAD)-$OCI_ARCH
-          podman build --build-arg SCORE_RELASE=latest -t ghcr.io/${IMG_NAMESPACE}:${IMG_TAG}-unsealed .
-
-          ./auto-image-builder.sh build-builder --distro autosd10-sig
+          podman build --build-arg SCORE_RELASE=latest -t ghcr.io/${IMG_NAMESPACE}:${IMG_TAG}-unsealed 
+          
           ./auto-image-builder.sh reseal  ghcr.io/${IMG_NAMESPACE}:${IMG_TAG}-unsealed ghcr.io/${IMG_NAMESPACE}:${IMG_TAG}
         working-directory: ./images/autosd_x86_64/build
 
