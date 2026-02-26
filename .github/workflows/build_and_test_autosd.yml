@@ -50,18 +50,18 @@ jobs:
       - name: Install System Dependencies
         run: |
           sudo apt-get update -y
-          sudo apt-get install -y podman curl qemu-system createrepo-c
+          sudo apt-get install -y podman curl qemu-system createrepo-c gh
 
-      - name: Build Showcases
-        run: |
-          bazel build --config autosd-x86_64 //images/autosd_x86_64:image
-        working-directory: ./images/autosd_x86_64
+     #  - name: Build Showcases
+     #   run: |
+     #     bazel build --config autosd-x86_64 //images/autosd_x86_64:image
+     #   working-directory: ./images/autosd_x86_64
 
-      - name: Copy showcases_all folder
-        run: |
-          set -e
-          mkdir -p ./images/autosd_x86_64/build/rpms
-          cp -R bazel-bin/showcases/showcases_all ./images/autosd_x86_64/build/files/
+     # - name: Copy showcases_all folder
+     #   run: |
+     #     set -e
+     #     mkdir -p ./images/autosd_x86_64/build/rpms
+     #     cp -R bazel-bin/showcases/showcases_all ./images/autosd_x86_64/build/files/
       
       - name: Install AIB Tools
         run: |
@@ -70,8 +70,15 @@ jobs:
         working-directory: ./images/autosd_x86_64/build
 
       - name: Pull AutoSD Bootc Image
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
-          curl https://github.com/eclipse-score/os_images/actions/runs/22435516853/artifacts/5669287849 | podman image load  
+          gh run list \
+          --workflow autosd_build_and_publish.yml \
+          --repo eclipse-score/os_images \
+          --branch main \
+          --status success \
+          --limit 1
 
       - name: Build AutoSD Bootc Deployment
         run: |
@@ -89,27 +96,27 @@ jobs:
           
           podman push ghcr.io/${IMG_NAMESPACE}:${IMG_TAG}
 
-      - name: Enable KVM group perms
-        run: |
-          echo 'KERNEL=="kvm", GROUP="kvm", MODE="0666", OPTIONS+="static_node=kvm"' | sudo tee /etc/udev/rules.d/99-kvm4all.rules
-          sudo udevadm control --reload-rules
-          sudo udevadm trigger --name-match=kvm
+      # - name: Enable KVM group perms
+      #   run: |
+      #     echo 'KERNEL=="kvm", GROUP="kvm", MODE="0666", OPTIONS+="static_node=kvm"' | sudo tee /etc/udev/rules.d/99-kvm4all.rules
+      #     sudo udevadm control --reload-rules
+      #     sudo udevadm trigger --name-match=kvm
     
-      - name: Test QEMU image
-        run: |
-          sshcmd() {
-            sshpass -p "$SSH_PASSWORD" ssh -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null -p 2222 root@localhost $@
-          }
+      # - name: Test QEMU image
+      #   run: |
+      #     sshcmd() {
+      #       sshpass -p "$SSH_PASSWORD" ssh -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null -p 2222 root@localhost $@
+      #     }
           
-          ./scripts/run_qemu
+      #     ./scripts/run_qemu
           
-          sshcmd 'cat /etc/os-release'
-        working-directory: ./images/autosd_x86_64/build
-        env:
-          SSH_PASSWORD: password
+      #     sshcmd 'cat /etc/os-release'
+      #   working-directory: ./images/autosd_x86_64/build
+      #   env:
+      #     SSH_PASSWORD: password
       
-      - name: Archive QEMU disk image (x86_64)
-        uses: actions/upload-artifact@v4
-        with:
-          name: autosd10-score-reference_integration-x86_64.qcow2
-          path: images/autosd_x86_64/build/_build/disk.qcow2
+      # - name: Archive QEMU disk image (x86_64)
+      #   uses: actions/upload-artifact@v4
+      #   with:
+      #     name: autosd10-score-reference_integration-x86_64.qcow2
+      #     path: images/autosd_x86_64/build/_build/disk.qcow2
