@@ -52,6 +52,9 @@ jobs:
           sudo apt-get update -y
           sudo apt-get install -y podman curl qemu-system createrepo-c gh jq
 
+      - name: Podman info
+        run: podman info
+
       - name: Build Showcases
         run: |
          bazel build --config autosd-x86_64 //images/autosd_x86_64:image
