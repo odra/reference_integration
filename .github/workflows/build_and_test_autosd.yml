@@ -83,11 +83,12 @@ jobs:
 
           echo "Using Workflow Run ID: $RUN_ID"
 
-          gh run download $RUN_ID -n score-autosd-x86_64-latest-qemu.tar --repo eclipse-score/os_images
-          mv score-autosd-x86_64-latest-qemu.tar.zip
-          unzip score-autosd-x86_64-latest-qemu.tar.zip
+          export ARTIFACT_NAME=score-autosd-x86_64-latest-qemu.tar
+          gh run download $RUN_ID -n $ARTIFACT_NAME --repo eclipse-score/os_images
+          mv $ARTIFACT_NAME $ARTIFACT_NAME.zip
+          unzip $ARTIFACT_NAME.zip
 
-          podman image import score-autosd-x86_64-latest-qemu.tar
+          podman image import $ARTIFACT_NAME
 
           podman images
 
