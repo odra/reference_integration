@@ -76,7 +76,6 @@ jobs:
           gh run list \
           --workflow autosd_build_and_publish.yml \
           --repo eclipse-score/os_images \
-          --branch main \
           --status success \
           --limit 1
 
