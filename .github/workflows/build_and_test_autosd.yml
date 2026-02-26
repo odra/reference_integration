@@ -96,6 +96,7 @@ jobs:
           export AIB_LOCAL_CONTAINER_STORAGE=/var/lib/containers/storage
 
           ./auto-image-builder.sh build-builder  --distro autosd10-sig
+        working-directory: ./images/autosd_x86_64/build
 
       - name: Build AutoSD Bootc Deployment
         run: |
