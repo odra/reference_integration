@@ -85,8 +85,6 @@ jobs:
 
           export ARTIFACT_NAME=score-autosd-x86_64-latest-qemu.tar
           gh run download $RUN_ID -n $ARTIFACT_NAME --repo eclipse-score/os_images
-          mv $ARTIFACT_NAME $ARTIFACT_NAME.zip
-          unzip $ARTIFACT_NAME.zip
 
           podman image import $ARTIFACT_NAME
 
