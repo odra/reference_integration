@@ -98,7 +98,9 @@ jobs:
           # mkdir -p _build/continer-storage
           export AIB_LOCAL_CONTAINER_STORAGE=$HOME/.local/share/containers/storage
 
-          ./auto-image-builder.sh build-builder  --distro autosd10-sig
+          sudo ./auto-image-builder.sh build-builder  --distro autosd10-sig
+
+          podman images
         working-directory: ./images/autosd_x86_64/build
 
       - name: Build AutoSD Bootc Deployment
