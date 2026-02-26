@@ -39,29 +39,29 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@v4
 
-      # - name: Setup Bazel
-      #   uses: bazel-contrib/setup-bazel@0.18.0
-      #   with:
-      #     bazelisk-cache: true
-      #     disk-cache: ${{ github.workflow }}
-      #     repository-cache: true
-      #     cache-save: ${{ github.event_name == 'push' }}
+      - name: Setup Bazel
+        uses: bazel-contrib/setup-bazel@0.18.0
+        with:
+          bazelisk-cache: true
+          disk-cache: ${{ github.workflow }}
+          repository-cache: true
+          cache-save: ${{ github.event_name == 'push' }}
 
       - name: Install System Dependencies
         run: |
           sudo apt-get update -y
           sudo apt-get install -y podman curl qemu-system createrepo-c gh jq
 
-     #  - name: Build Showcases
-     #   run: |
-     #     bazel build --config autosd-x86_64 //images/autosd_x86_64:image
-     #   working-directory: ./images/autosd_x86_64
+      - name: Build Showcases
+        run: |
+         bazel build --config autosd-x86_64 //images/autosd_x86_64:image
+        working-directory: ./images/autosd_x86_64
 
-     # - name: Copy showcases_all folder
-     #   run: |
-     #     set -e
-     #     mkdir -p ./images/autosd_x86_64/build/rpms
-     #     cp -R bazel-bin/showcases/showcases_all ./images/autosd_x86_64/build/files/
+      - name: Copy showcases_all folder
+        run: |
+         set -e
+         mkdir -p ./images/autosd_x86_64/build/rpms
+         cp -R bazel-bin/showcases/showcases_all ./images/autosd_x86_64/build/files/
       
       - name: Install AIB Tools
         run: |
