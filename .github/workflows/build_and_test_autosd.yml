@@ -28,6 +28,9 @@ jobs:
   build:
     name: x86_64
     runs-on: ubuntu-latest
+    permissions:
+      packages: write
+      contents: read
 
     steps:
       - name: Clean disk space
@@ -47,44 +50,88 @@ jobs:
       - name: Install System Dependencies
         run: |
           sudo apt-get update -y
-          sudo apt-get install -y podman curl qemu-system createrepo-c
+          sudo apt-get install -y podman curl qemu-system createrepo-c gh jq
+
+      - name: Podman info
+        run: podman info
 
       - name: Build Showcases
         run: |
-          bazel build --config autosd-x86_64 //images/autosd_x86_64:image
+         bazel build --config autosd-x86_64 //images/autosd_x86_64:image
         working-directory: ./images/autosd_x86_64
 
       - name: Copy showcases_all folder
         run: |
-          set -e
-          mkdir -p ./images/autosd_x86_64/build/rpms
-          cp -R bazel-bin/showcases/showcases_all ./images/autosd_x86_64/build/files/
+         set -e
+         mkdir -p ./images/autosd_x86_64/build/rpms
+         cp -R bazel-bin/showcases/showcases_all ./images/autosd_x86_64/build/files/
       
       - name: Install AIB Tools
         run: |
           curl -o auto-image-builder.sh "https://gitlab.com/CentOS/automotive/src/automotive-image-builder/-/raw/main/auto-image-builder.sh?ref_type=heads"
           chmod +x auto-image-builder.sh
         working-directory: ./images/autosd_x86_64/build
- 
-      - name: Build AutoSD QEMU (x86_64)
+
+      - name: Pull AutoSD Bootc Image
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
-          export AIB_LOCAL_CONTAINER_STORAGE=$PWD/_build/containers-storage
+          RUN_ID=$(gh run list \
+          --workflow autosd_build_and_publish.yml \
+          --repo eclipse-score/os_images \
+          --status success \
+          --limit 1 \
+          --json databaseId \
+          --jq '.[0].databaseId')
 
-          mkdir -p _build/containers-storage
-          sudo -E ./auto-image-builder.sh build-builder --distro=autosd10-sig
-          
-          sudo -E ./auto-image-builder.sh build \
-          --distro=autosd10-sig  \
-          --target=qemu \
-          --define-file vars.yml \
-          --define-file vars-devel.yml \
-          image.aib.yml \
-          localhost/score:latest
+          echo "Using Workflow Run ID: $RUN_ID"
 
-          sudo -E ./auto-image-builder.sh to-disk-image localhost/score:latest _build/disk.qcow2
+          export ARTIFACT_NAME=score-autosd-x86_64-latest-qemu.tar
+          gh run download $RUN_ID -n $ARTIFACT_NAME --repo eclipse-score/os_images
 
-          sudo chown $(id -u):$(id -u) _build/disk.qcow2
+          podman image import $ARTIFACT_NAME localhost/score:latest
+
+          podman images
+
+      - name: Build Bootc Builder (tmp)
+        run: |
+          # mkdir -p _build/continer-storage
+          export AIB_LOCAL_CONTAINER_STORAGE=$HOME/.local/share/containers/storage
+
+          sudo ./auto-image-builder.sh build-builder  --distro autosd10-sig
+
+          podman images
         working-directory: ./images/autosd_x86_64/build
+
+      - name: Build AutoSD Bootc Deployment
+        run: |
+          if [ "$(arch)" = "x86_64" ]; then
+            OCI_ARCH=amd64
+          else
+            OCI_ARCH=arm64
+          fi
+
+          export IMG_NAMESPACE=${{ github.repository_owner }}/score-autosd-bootc
+          export IMG_TAG=pr-${{ github.event.pull_request.number }}-$(git rev-parse --short HEAD)-$OCI_ARCH
+          podman build --build-arg SCORE_RELASE=latest -t ghcr.io/${IMG_NAMESPACE}:${IMG_TAG}-unsealed 
+          
+          ./auto-image-builder.sh reseal  ghcr.io/${IMG_NAMESPACE}:${IMG_TAG}-unsealed ghcr.io/${IMG_NAMESPACE}:${IMG_TAG}
+        working-directory: ./images/autosd_x86_64/build
+
+      - name: Push Container Image
+        run: |
+          if [ "$(arch)" = "x86_64" ]; then
+            OCI_ARCH=amd64
+          else
+            OCI_ARCH=arm64
+          fi
+
+          export IMG_NAMESPACE=${{ github.repository_owner }}/score-autosd-bootc
+          export IMG_TAG=pr-${{ github.event.pull_request.number }}-$(git rev-parse --short HEAD)-$OCI_ARCH
+
+          echo "${{ secrets.GITHUB_TOKEN }}" | podman login ghcr.io -u ${{ github.actor }} --password-stdin
+          
+          podman push ghcr.io/${IMG_NAMESPACE}:${IMG_TAG}
 
       - name: Enable KVM group perms
         run: |
@@ -92,21 +139,21 @@ jobs:
           sudo udevadm control --reload-rules
           sudo udevadm trigger --name-match=kvm
     
-      - name: Test QEMU image
-        run: |
-          sshcmd() {
-            sshpass -p "$SSH_PASSWORD" ssh -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null -p 2222 root@localhost $@
-          }
+      # - name: Test QEMU image
+      #   run: |
+      #     sshcmd() {
+      #       sshpass -p "$SSH_PASSWORD" ssh -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null -p 2222 root@localhost $@
+      #     }
           
-          ./scripts/run_qemu
+      #     ./scripts/run_qemu
           
-          sshcmd 'cat /etc/os-release'
-        working-directory: ./images/autosd_x86_64/build
-        env:
-          SSH_PASSWORD: password
+      #     sshcmd 'cat /etc/os-release'
+      #   working-directory: ./images/autosd_x86_64/build
+      #   env:
+      #     SSH_PASSWORD: password
       
-      - name: Archive QEMU disk image (x86_64)
-        uses: actions/upload-artifact@v4
-        with:
-          name: autosd10-score-reference_integration-x86_64.qcow2
-          path: images/autosd_x86_64/build/_build/disk.qcow2
+      # - name: Archive QEMU disk image (x86_64)
+      #   uses: actions/upload-artifact@v4
+      #   with:
+      #     name: autosd10-score-reference_integration-x86_64.qcow2
+      #     path: images/autosd_x86_64/build/_build/disk.qcow2

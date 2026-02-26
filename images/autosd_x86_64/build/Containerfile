@@ -1,0 +1,12 @@
+ARG SCORE_RELEASE=latest
+
+FROM quay.io/centos/centos:stream10 AS builder
+
+RUN mkdir -p /usr/share/score/examples
+COPY files/showcases_all /usr/share/score/examples/showcases_all
+RUN chmod +x /usr/share/score/examples/showcases_all/bin/*
+
+
+FROM localhost/score:${SCORE_RELEASE}
+
+COPY --from=builder /usr/share/score  /usr/share/score
