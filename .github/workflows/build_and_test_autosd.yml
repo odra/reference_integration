@@ -39,18 +39,18 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@v4
 
-      - name: Setup Bazel
-        uses: bazel-contrib/setup-bazel@0.18.0
-        with:
-          bazelisk-cache: true
-          disk-cache: ${{ github.workflow }}
-          repository-cache: true
-          cache-save: ${{ github.event_name == 'push' }}
+      # - name: Setup Bazel
+      #   uses: bazel-contrib/setup-bazel@0.18.0
+      #   with:
+      #     bazelisk-cache: true
+      #     disk-cache: ${{ github.workflow }}
+      #     repository-cache: true
+      #     cache-save: ${{ github.event_name == 'push' }}
 
       - name: Install System Dependencies
         run: |
           sudo apt-get update -y
-          sudo apt-get install -y podman curl qemu-system createrepo-c gh
+          sudo apt-get install -y podman curl qemu-system createrepo-c gh jq
 
      #  - name: Build Showcases
      #   run: |
@@ -78,6 +78,7 @@ jobs:
           --repo eclipse-score/os_images \
           --status success \
           --limit 1 \
+          --json databaseId \
           --jq '.[0].databaseId')
 
           echo "Using Workflow Run ID: $RUN_ID"
