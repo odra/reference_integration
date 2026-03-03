@@ -171,3 +171,5 @@ local_path_override(module_name = "score_tooling", path = "../tooling")
 ### Rust
 
 Use `scripts/generate_rust_analyzer_support.sh` to generate rust_analyzer settings that will let VS Code work.
+
+
