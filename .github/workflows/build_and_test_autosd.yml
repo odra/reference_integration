@@ -59,7 +59,7 @@ jobs:
           mkdir -p _build/containers-storage
           sudo -E ./auto-image-builder.sh build-builder --distro=autosd10-sig
 
-          sudo -E ./auto-image-builder.sh build \
+          sudo -E ./auto-image-builder.sh --verbose build \
           --distro=autosd10-sig  \
           --target=qemu \
           --define-file vars.yml \
