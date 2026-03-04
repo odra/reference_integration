@@ -73,7 +73,7 @@ jobs:
           image.aib.yml \
           localhost/score:latest
 
-          sudo -E ./auto-image-builder.sh -c $AIB_CONTAINER_IMAGE to-disk-image localhost/score:latest _build/disk.qcow2
+          sudo -E ./auto-image-builder.sh -c $AIB_CONTAINER_IMAGE --verbose to-disk-image localhost/score:latest _build/disk.qcow2
 
           sudo chown $(id -u):$(id -u) _build/disk.qcow2
         working-directory: ./images/autosd_x86_64/build
