@@ -55,7 +55,7 @@ jobs:
           cp -R ./bazel-bin/showcases/showcases/showcases ./images/autosd_x86_64/build/files/reference_integration/
       - name: Install AIB Tools
         run: |
-          curl -o auto-image-builder.sh "https://gitlab.com/CentOS/automotive/src/automotive-image-builder/-/raw/1.1.11/auto-image-builder.sh?ref_type=tag"
+          curl -o auto-image-builder.sh "https://gitlab.com/CentOS/automotive/src/automotive-image-builder/-/raw/fix-rootless-container-bcib-workaround/auto-image-builder.sh"
           chmod +x auto-image-builder.sh
         working-directory: ./images/autosd_x86_64/build
       - name: Build AutoSD QEMU (x86_64)
