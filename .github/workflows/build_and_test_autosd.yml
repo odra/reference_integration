@@ -28,7 +28,7 @@ jobs:
     name: x86_64
     runs-on: ubuntu-latest
     env:
-      AIB_CONTAINER_IMAGE: quay.io/centos-sig-automotive/automotive-image-builder:1.1.11
+      AIB_CONTAINER_IMAGE: quay.io/centos-sig-automotive/automotive-image-builder:latest
     steps:
       - name: Clean disk space
         uses: eclipse-score/more-disk-space@v1
