@@ -41,7 +41,7 @@ sh_binary(
 
 oci_image(
     name = "image",
-    base = "@centos_stream10",
+    base = "@autosd10",
     tars = [
         "//showcases:showcases_pkg_tar",
     ],
