@@ -76,7 +76,8 @@ jobs:
           #podman image exists localhost/score:latest
       - name: Build Showcases
         run: |
-          bazel build --lockfile_mode=error --config autosd-x86_64 //images/autosd_x86_64:image
+          # bazel build --lockfile_mode=error --config autosd-x86_64 //images/autosd_x86_64:image
+          bazel build --config autosd-x86_64 //images/autosd_x86_64:image
       #- name: Copy showcases folder
       #  run: |
       #    set -e
