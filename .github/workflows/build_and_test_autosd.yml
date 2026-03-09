@@ -49,7 +49,7 @@ jobs:
       - name: Install System Dependencies
         run: |
           sudo apt-get update -y
-          sudo apt-get install -y podman curl qemu-system createrepo-c gh
+          sudo apt-get install -y podman curl qemu-system createrepo-c gh tree
       - name: Install AIB Tools
         run: |
           curl -o auto-image-builder.sh "$AIB_SCRIPT_URL"
@@ -74,10 +74,14 @@ jobs:
 
           #podman image import $ARTIFACT_NAME localhost/score:latest
           #podman image exists localhost/score:latest
-      - name: Build Showcases
+      - name: //images/autosd_x86_64:image
         run: |
           # bazel build --lockfile_mode=error --config autosd-x86_64 //images/autosd_x86_64:image
           bazel build --config autosd-x86_64 //images/autosd_x86_64:image
+          ls -la
+      - name: //images/autosd_x86_64:run
+        run: |
+          bazel build --config autosd-x86_64 //images/autosd_x86_64:run
       #- name: Copy showcases folder
       #  run: |
       #    set -e
