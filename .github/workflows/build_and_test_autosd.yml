@@ -56,7 +56,8 @@ jobs:
           chmod +x auto-image-builder.sh
         working-directory: /usr/local/bin
       - name: Podman Login
-        run: echo $GITHUB_TOKEN | docker login ghcr.io -u USERNAME --password-stdin
+        run: |
+          echo "${{ secrets.GITHUB_TOKEN }}" | podman login ghcr.io -u ${{ github.actor }} --password-stdin
       - name: Build Image
         run: |
           # bazel build --lockfile_mode=error --config autosd-x86_64 //images/autosd_x86_64:image

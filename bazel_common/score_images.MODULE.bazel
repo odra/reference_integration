@@ -1,4 +1,9 @@
-bazel_dep(name = "rules_oci", version = "1.8.0")
+bazel_dep(name = "rules_oci", version = "2.2.7")
+git_override(
+    module_name = "rules_oci",
+    commit = "d688832fb0deee00bf842bf0c81377e6bab62f51",
+    remote = "https://github.com/bazel-contrib/rules_oci.git",
+)
 
 oci = use_extension("@rules_oci//oci:extensions.bzl", "oci")
 
@@ -14,8 +19,8 @@ oci.pull(
     name = "autosd10",
     digest = "sha256:7e78bedb5368daec66c8f2f5fe6fea29b88f35605415034e7d2cede80a62369b",
     image = "ghcr.io/odra/os_images/score-autosd",
-    platforms = ["linux/amd64"],
-    tag = "latest-qemu-amd64",
+    #platforms = ["linux/amd64"],
+    #tag = "latest-qemu-amd64",
 )
 
 use_repo(oci, "autosd10", "ubuntu_22_04")

@@ -1,4 +1,4 @@
-load("@rules_oci//oci:defs.bzl", "oci_image", "oci_tarball")
+load("@rules_oci//oci:defs.bzl", "oci_image", "oci_load")
 
 # *******************************************************************************
 # Copyright (c) 2024 Contributors to the Eclipse Foundation
@@ -47,7 +47,7 @@ oci_image(
     ],
 )
 
-oci_tarball(
+oci_load(
     name = "image_tarball",
     image = ":image",
     repo_tags = ["score_showcases_autosd:latest"],
