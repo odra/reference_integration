@@ -55,31 +55,13 @@ jobs:
           curl -o auto-image-builder.sh "$AIB_SCRIPT_URL"
           chmod +x auto-image-builder.sh
         working-directory: /usr/local/bin
-      - name: Pull AutoSD Bootc Image
-        env:
-          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        run: |
-          RUN_ID=$(gh run list \
-          --workflow autosd_build_and_publish.yml \
-          --repo eclipse-score/os_images \
-          --status success \
-          --limit 1 \
-          --json databaseId \
-          --jq '.[0].databaseId')
-
-          echo "Using Workflow Run ID: $RUN_ID"
-
-          export ARTIFACT_NAME=score-autosd-qemu-x86_64-latest.tar
-          gh run download $RUN_ID -n $ARTIFACT_NAME --repo eclipse-score/os_images
-
-          #podman image import $ARTIFACT_NAME localhost/score:latest
-          #podman image exists localhost/score:latest
-      - name: //images/autosd_x86_64:image
+      - name: Podman Login
+        run: echo $GITHUB_TOKEN | docker login ghcr.io -u USERNAME --password-stdin
+      - name: Build Image
         run: |
           # bazel build --lockfile_mode=error --config autosd-x86_64 //images/autosd_x86_64:image
           bazel build --config autosd-x86_64 //images/autosd_x86_64:image
-          ls -la
-      - name: //images/autosd_x86_64:run
+      - name: Run Scrample
         run: |
           bazel build --config autosd-x86_64 //images/autosd_x86_64:run
       #- name: Copy showcases folder
