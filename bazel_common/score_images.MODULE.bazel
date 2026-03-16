@@ -17,10 +17,10 @@ oci.pull(
 
 oci.pull(
     name = "autosd10",
-    digest = "sha256:7e78bedb5368daec66c8f2f5fe6fea29b88f35605415034e7d2cede80a62369b",
-    image = "ghcr.io/odra/os_images/score-autosd",
+    digest = "sha256:0a78787074d9083ea7b78bdf958d4f574e9085c910850793e0eb83332a1cb4de",
+    image = "ghcr.io/odra/os_images/score-autosd-qemu",
     #platforms = ["linux/amd64"],
-    #tag = "latest-qemu-amd64",
+    tag = "pr4-amd64",
 )
 
 use_repo(oci, "autosd10", "ubuntu_22_04")

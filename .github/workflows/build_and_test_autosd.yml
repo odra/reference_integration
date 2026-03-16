@@ -55,9 +55,6 @@ jobs:
           curl -o auto-image-builder.sh "$AIB_SCRIPT_URL"
           chmod +x auto-image-builder.sh
         working-directory: /usr/local/bin
-      - name: Podman Login
-        run: |
-          echo "${{ secrets.GITHUB_TOKEN }}" | podman login ghcr.io -u ${{ github.actor }} --password-stdin
       - name: Build Image
         run: |
           # bazel build --lockfile_mode=error --config autosd-x86_64 //images/autosd_x86_64:image
@@ -65,6 +62,11 @@ jobs:
       - name: Run Scrample
         run: |
           bazel build --config autosd-x86_64 //images/autosd_x86_64:run
+
+      - name: Test
+        run: |
+          tree -a .
+          podman images
       #- name: Copy showcases folder
       #  run: |
       #    set -e
