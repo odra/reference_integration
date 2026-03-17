@@ -6,7 +6,6 @@ git_override(
 )
 
 oci = use_extension("@rules_oci//oci:extensions.bzl", "oci")
-
 oci.pull(
     name = "ubuntu_22_04",
     digest = "sha256:3ba65aa20f86a0fad9df2b2c259c613df006b2e6d0bfcc8a146afb8c525a9751",
@@ -14,13 +13,11 @@ oci.pull(
     platforms = ["linux/amd64"],
     tag = "22.04",
 )
-
 oci.pull(
     name = "autosd10",
     digest = "sha256:0a78787074d9083ea7b78bdf958d4f574e9085c910850793e0eb83332a1cb4de",
     image = "ghcr.io/odra/os_images/score-autosd-qemu",
-    #platforms = ["linux/amd64"],
     tag = "pr4-amd64",
 )
-
-use_repo(oci, "autosd10", "ubuntu_22_04")
+use_repo(oci, "autosd10")
+use_repo(oci, "ubuntu_22_04", "ubuntu_22_04_linux_amd64")
