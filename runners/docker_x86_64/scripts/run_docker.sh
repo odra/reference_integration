@@ -52,7 +52,13 @@ echo "Starting docker with OCI image tarball at: ${OCI_TARBALL_IMAGE_SCRIPT_ABS_
 
 ${OCI_TARBALL_IMAGE_SCRIPT_ABS_PATH}
 
+if [ -t 1 ] && [ -z "$CI" ]; then
+  TTY_ARGS="-it"
+else
+  TTY_ARGS=""
+fi
+
 echo "Running docker with image: ${OCI_IMAGE}"
-docker run --rm -it \
+docker run --rm ${TTY_ARGS} \
     ${OCI_IMAGE} \
     bash -c "/showcases/bin/cli; exec bash"

@@ -36,6 +36,7 @@ sh_binary(
     ],
     env = {
         "OCI_IMAGE": "score_showcases_autosd:latest",
+        "CI": "Y"
     },
 )
 
