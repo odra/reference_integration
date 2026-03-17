@@ -35,13 +35,13 @@ sh_binary(
         ":image_load",
     ],
     env = {
-        "OCI_IMAGE": "score_showcases_autosd:latest",
+        "OCI_IMAGE": "localhost/score_showcases_autosd:latest",
         "CI": "Y"
     },
 )
 
 oci_image(
-    name = "image",
+    name = "image_bootc",
     base = "@autosd10",
     tars = [
         "//showcases:showcases_pkg_tar",
@@ -50,9 +50,11 @@ oci_image(
 
 oci_load(
     name = "image_load",
-    image = ":image",
-    repo_tags = ["score_showcases_autosd:latest"],
+    image = ":image_bootc",
+    repo_tags = ["localhost/score_showcases_autosd:latest"],
+    format = "oci",
     visibility = [
-        "//feature_integration_tests/itf:__pkg__",
+        # "//feature_integration_tests/itf:__pkg__",
+        "//visibility:public"
     ],
 )

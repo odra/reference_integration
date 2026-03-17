@@ -55,13 +55,14 @@ jobs:
           curl -o auto-image-builder.sh "$AIB_SCRIPT_URL"
           chmod +x auto-image-builder.sh
         working-directory: /usr/local/bin
-      - name: Build Scrample
+      - name: Build Bootc Image
         run: |
-          bazel --output_base=build/autosd-x86_64 build --config autosd-x86_64  //images/autosd_x86_64:run
-          ls -la build/
-          ls -la build/autosd-x86_64
-          ls -la 
-          tree -a .
+          bazel build --config autosd-x86_64  //images/autosd_x86_64:image_bootc
+          bazel build --config autosd-x86_64  //images/autosd_x86_64:image_load
+      - name: Inspect Output
+        run: |
+          tree bazel-bin/images
+        working-directory: ${{ github.workspace }}
       #- name: Copy showcases folder
       #  run: |
       #    set -e
