@@ -59,14 +59,10 @@ jobs:
         run: |
           # bazel build --lockfile_mode=error --config autosd-x86_64 //images/autosd_x86_64:image
           bazel build --config autosd-x86_64 //images/autosd_x86_64:image
+          tree -a .
       - name: Run Scrample
         run: |
           bazel build --config autosd-x86_64 //images/autosd_x86_64:run
-
-      - name: Test
-        run: |
-          tree -a .
-          podman images
       #- name: Copy showcases folder
       #  run: |
       #    set -e
