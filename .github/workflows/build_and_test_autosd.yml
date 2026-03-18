@@ -40,16 +40,23 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@v4
       - name: Setup Bazel
-        uses: bazel-contrib/setup-bazel@0.18.0
+        uses: bazel-contrib/setup-bazel@0.18.0 
         with:
           bazelisk-cache: true
           disk-cache: ${{ github.workflow }}
           repository-cache: true
           cache-save: ${{ github.event_name == 'push' }}
+      - name: Set up Docker
+        uses: docker/setup-docker-action@v5
+      - name: Enable KVM group perms
+        run: |
+          echo 'KERNEL=="kvm", GROUP="kvm", MODE="0666", OPTIONS+="static_node=kvm"' | sudo tee /etc/udev/rules.d/99-kvm4all.rules
+          sudo udevadm control --reload-rules
+          sudo udevadm trigger --name-match=kvm
       - name: Install System Dependencies
         run: |
           sudo apt-get update -y
-          sudo apt-get install -y podman curl qemu-system createrepo-c gh tree
+          sudo apt-get install -y curl qemu-system createrepo-c gh tree
       - name: Install AIB Tools
         run: |
           curl -o auto-image-builder.sh "$AIB_SCRIPT_URL"
@@ -59,9 +66,19 @@ jobs:
         run: |
           bazel build --config autosd-x86_64  //images/autosd_x86_64:image_bootc
           bazel build --config autosd-x86_64  //images/autosd_x86_64:image_load
-      - name: Inspect Output
+      - name: Copy tar file
         run: |
-          tree bazel-bin/images
+          bazel run --config autosd-x86_64  //images/autosd_x86_64:oci-to-disk-image
+        working-directory: ${{ github.workspace }}
+      - name: Generate Disk Image
+        run: |
+          docker pull ghcr.io/odra/os_images/score-autosd-builder:pr4-amd64
+          ls -la
+          skopeo copy docker-archive:image.tar oci-archive:image.oci 
+          auto-image-builder.sh --verbose to-disk-image \
+          --build-container ghcr.io/odra/os_images/score-autosd-builder:pr4-amd64 \
+          --oci-archive image.oci \
+          disk.qcow2
         working-directory: ${{ github.workspace }}
       #- name: Copy showcases folder
       #  run: |

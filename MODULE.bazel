@@ -71,3 +71,12 @@ toolchains_qnx.sdp(
 )
 use_repo(toolchains_qnx, "toolchains_qnx_sdp")
 use_repo(toolchains_qnx, "toolchains_qnx_ifs")
+
+http_file = use_repo_rule("@bazel_tools//tools/build_defs/repo:http.bzl", "http_file")
+
+http_file(
+    name = "autosd_builder_script",
+    executable = True,
+    sha256 = "38df91e24ec3e1ec971d2765ec7bd72524bd27d077ac6fd7d0a712d84ff48e54",
+    urls = ["https://gitlab.com/CentOS/automotive/src/automotive-image-builder/-/raw/1.1.14/auto-image-builder.sh?ref_type=tags"],
+)
