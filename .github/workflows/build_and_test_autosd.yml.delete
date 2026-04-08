@@ -1,0 +1,161 @@
+# *******************************************************************************
+# Copyright (c) 2025 Contributors to the Eclipse Foundation
+#
+# See the NOTICE file(s) distributed with this work for additional
+# information regarding copyright ownership.
+#
+# This program and the accompanying materials are made available under the
+# terms of the Apache License Version 2.0 which is available at
+# https://www.apache.org/licenses/LICENSE-2.0
+#
+# SPDX-License-Identifier: Apache-2.0
+# *******************************************************************************
+
+name: AutoSD - Build & Integration Test
+
+on:
+  workflow_dispatch:
+
+  pull_request:
+    types: [opened, reopened, synchronize]
+
+  merge_group:
+    types: [checks_requested]
+
+  push:
+    branches:
+      - main
+
+jobs:
+  build:
+    name: x86_64
+    runs-on: ubuntu-latest
+    permissions:
+      packages: write
+      contents: read
+
+    steps:
+      - name: Clean disk space
+        uses: eclipse-score/more-disk-space@v1
+
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Setup Bazel
+        uses: bazel-contrib/setup-bazel@0.18.0
+        with:
+          bazelisk-cache: true
+          disk-cache: ${{ github.workflow }}
+          repository-cache: true
+          cache-save: ${{ github.event_name == 'push' }}
+
+      - name: Install System Dependencies
+        run: |
+          sudo apt-get update -y
+          sudo apt-get install -y podman curl qemu-system createrepo-c gh jq
+
+      - name: Podman info
+        run: podman info
+
+      - name: Build Showcases
+        run: |
+         bazel build --config autosd-x86_64 //images/autosd_x86_64:image
+        working-directory: ./images/autosd_x86_64
+
+      - name: Copy showcases_all folder
+        run: |
+         set -e
+         mkdir -p ./images/autosd_x86_64/build/rpms
+         cp -R bazel-bin/showcases/showcases_all ./images/autosd_x86_64/build/files/
+      
+      - name: Install AIB Tools
+        run: |
+          curl -o auto-image-builder.sh "https://gitlab.com/CentOS/automotive/src/automotive-image-builder/-/raw/main/auto-image-builder.sh?ref_type=heads"
+          chmod +x auto-image-builder.sh
+        working-directory: ./images/autosd_x86_64/build
+
+      - name: Pull AutoSD Bootc Image
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          RUN_ID=$(gh run list \
+          --workflow autosd_build_and_publish.yml \
+          --repo eclipse-score/os_images \
+          --status success \
+          --limit 1 \
+          --json databaseId \
+          --jq '.[0].databaseId')
+
+          echo "Using Workflow Run ID: $RUN_ID"
+
+          export ARTIFACT_NAME=score-autosd-x86_64-latest-qemu.tar
+          gh run download $RUN_ID -n $ARTIFACT_NAME --repo eclipse-score/os_images
+
+          podman image import $ARTIFACT_NAME localhost/score:latest
+
+          podman images
+
+      - name: Build Bootc Builder (tmp)
+        run: |
+          # mkdir -p _build/continer-storage
+          export AIB_LOCAL_CONTAINER_STORAGE=$HOME/.local/share/containers/storage
+
+          sudo ./auto-image-builder.sh build-builder  --distro autosd10-sig
+
+          podman images
+        working-directory: ./images/autosd_x86_64/build
+
+      - name: Build AutoSD Bootc Deployment
+        run: |
+          if [ "$(arch)" = "x86_64" ]; then
+            OCI_ARCH=amd64
+          else
+            OCI_ARCH=arm64
+          fi
+
+          export IMG_NAMESPACE=${{ github.repository_owner }}/score-autosd-bootc
+          export IMG_TAG=pr-${{ github.event.pull_request.number }}-$(git rev-parse --short HEAD)-$OCI_ARCH
+          podman build --build-arg SCORE_RELASE=latest -t ghcr.io/${IMG_NAMESPACE}:${IMG_TAG}-unsealed 
+          
+          ./auto-image-builder.sh reseal  ghcr.io/${IMG_NAMESPACE}:${IMG_TAG}-unsealed ghcr.io/${IMG_NAMESPACE}:${IMG_TAG}
+        working-directory: ./images/autosd_x86_64/build
+
+      - name: Push Container Image
+        run: |
+          if [ "$(arch)" = "x86_64" ]; then
+            OCI_ARCH=amd64
+          else
+            OCI_ARCH=arm64
+          fi
+
+          export IMG_NAMESPACE=${{ github.repository_owner }}/score-autosd-bootc
+          export IMG_TAG=pr-${{ github.event.pull_request.number }}-$(git rev-parse --short HEAD)-$OCI_ARCH
+
+          echo "${{ secrets.GITHUB_TOKEN }}" | podman login ghcr.io -u ${{ github.actor }} --password-stdin
+          
+          podman push ghcr.io/${IMG_NAMESPACE}:${IMG_TAG}
+
+      - name: Enable KVM group perms
+        run: |
+          echo 'KERNEL=="kvm", GROUP="kvm", MODE="0666", OPTIONS+="static_node=kvm"' | sudo tee /etc/udev/rules.d/99-kvm4all.rules
+          sudo udevadm control --reload-rules
+          sudo udevadm trigger --name-match=kvm
+    
+      # - name: Test QEMU image
+      #   run: |
+      #     sshcmd() {
+      #       sshpass -p "$SSH_PASSWORD" ssh -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null -p 2222 root@localhost $@
+      #     }
+          
+      #     ./scripts/run_qemu
+          
+      #     sshcmd 'cat /etc/os-release'
+      #   working-directory: ./images/autosd_x86_64/build
+      #   env:
+      #     SSH_PASSWORD: password
+      
+      # - name: Archive QEMU disk image (x86_64)
+      #   uses: actions/upload-artifact@v4
+      #   with:
+      #     name: autosd10-score-reference_integration-x86_64.qcow2
+      #     path: images/autosd_x86_64/build/_build/disk.qcow2

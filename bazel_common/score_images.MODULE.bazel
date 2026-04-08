@@ -1,4 +1,9 @@
 bazel_dep(name = "rules_oci", version = "2.2.7")
+git_override(
+    module_name = "rules_oci",
+    commit = "d688832fb0deee00bf842bf0c81377e6bab62f51",
+    remote = "https://github.com/bazel-contrib/rules_oci.git",
+)
 
 oci = use_extension("@rules_oci//oci:extensions.bzl", "oci")
 oci.pull(
@@ -9,13 +14,13 @@ oci.pull(
     tag = "22.04",
 )
 oci.pull(
-    name = "centos_stream10",
-    digest = "sha256:01858c09da8f130c718c37673b83aaaf65c6493e66f4c674caffcffe9ed4c225",
-    image = "quay.io/centos/centos",
+    name = "autosd10_qemu",
+    digest = "sha256:8eedf118e6cba1d8714ee32c67b61f11c07a673825c1133a56d7dd6a4365806a",
+    image = "ghcr.io/eclipse-autosd/eclipse-autosd-bootc-qemu",
     platforms = ["linux/amd64"],
-    tag = "stream10",
+    tag = "latest-base",
 )
-use_repo(oci, "centos_stream10", "centos_stream10_linux_amd64")
+use_repo(oci, "autosd10_qemu", "autosd10_qemu_linux_amd64")
 use_repo(oci, "ubuntu_22_04", "ubuntu_22_04_linux_amd64")
 
 http_file = use_repo_rule("@bazel_tools//tools/build_defs/repo:http.bzl", "http_file")
