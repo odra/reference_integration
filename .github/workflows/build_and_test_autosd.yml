@@ -12,6 +12,7 @@
 # *******************************************************************************
 name: AutoSD - Build & Integration Test
 on:
+  workflow_dispatch: 
   pull_request:
     types: [opened, reopened, synchronize]
   merge_group:
@@ -25,8 +26,18 @@ concurrency:
   cancel-in-progress: ${{ github.ref_name != 'main' && !startsWith(github.ref_name, 'release/') }}
 jobs:
   build:
-    name: x86_64
-    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        platform: [autosd-x86_64, autosd-aarch64]
+        include:
+          - platform: autosd-x86_64
+            arch: x86_64
+            runner: ubuntu-24.04
+          - platform: autosd-aarch64
+            arch: aarch64
+            runner: ubuntu-24.04-arm
+    name: ${{ matrix.platform }}
+    runs-on: ${{ matrix.runner }}
     env:
       AIB_SCRIPT_URL: https://gitlab.com/CentOS/automotive/src/automotive-image-builder/-/raw/main/auto-image-builder.sh?ref_type=heads
       AIB_CONTAINER_IMAGE: quay.io/centos-sig-automotive/automotive-image-builder:latest
@@ -48,17 +59,17 @@ jobs:
           sudo apt-get install -y podman curl qemu-system createrepo-c
       - name: Build Showcases
         run: |
-          bazel build --lockfile_mode=error --config autosd-x86_64 //images/autosd_x86_64:score-showcases
+          bazel build --lockfile_mode=error --config autosd-${{ matrix.arch }} //images/autosd:score-showcases
       - name: Copy showcases folder
         run: |
           set -e
           ls ./bazel-bin/showcases/showcases/showcases
-          cp -R ./bazel-bin/showcases/showcases/showcases ./images/autosd_x86_64/build/files/reference_integration/
+          cp -R ./bazel-bin/showcases/showcases/showcases ./images/autosd/build/files/reference_integration/
       - name: Install AIB Tools
         run: |
           curl -o auto-image-builder.sh "$AIB_SCRIPT_URL"
           chmod +x auto-image-builder.sh
-        working-directory: ./images/autosd_x86_64/build
+        working-directory: ./images/autosd/build
       - name: Build AutoSD QEMU (x86_64)
         run: |
           export AIB_LOCAL_CONTAINER_STORAGE=$PWD/_build/containers-storage
@@ -77,7 +88,7 @@ jobs:
           sudo -E ./auto-image-builder.sh -c $AIB_CONTAINER_IMAGE --verbose to-disk-image localhost/score:latest _build/disk.qcow2
 
           sudo chown $(id -u):$(id -u) _build/disk.qcow2
-        working-directory: ./images/autosd_x86_64/build
+        working-directory: ./images/autosd/build
       - name: Enable KVM group perms
         run: |
           echo 'KERNEL=="kvm", GROUP="kvm", MODE="0666", OPTIONS+="static_node=kvm"' | sudo tee /etc/udev/rules.d/99-kvm4all.rules
@@ -92,11 +103,11 @@ jobs:
           ./scripts/run_qemu
 
           sshcmd 'cat /etc/os-release'
-        working-directory: ./images/autosd_x86_64/build
+        working-directory: ./images/autosd/build
         env:
           SSH_PASSWORD: password
-      - name: Archive QEMU disk image (x86_64)
+      - name: Archive QEMU disk image (${{ matrix.arch }})
         uses: actions/upload-artifact@v4
         with:
-          name: autosd10-score-reference_integration-x86_64.qcow2
-          path: images/autosd_x86_64/build/_build/disk.qcow2
+          name: autosd10-score-reference_integration-${{matrix.arch}}.qcow2
+          path: images/autosd/build/_build/disk.qcow2

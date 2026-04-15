@@ -39,8 +39,24 @@ sh_binary(
     },
 )
 
+alias(
+  name = "image",
+  actual = select({
+    "@platforms//cpu:x86_64": ":image_amd64",
+    "@platforms//cpu:aarch64": ":image_arm64",
+  })
+)
+
 oci_image(
-    name = "image",
+    name = "image_amd64",
+    base = "@centos_stream10_linux_amd64",
+    tars = [
+        "//showcases:showcases_pkg_tar",
+    ],
+)
+
+oci_image(
+    name = "image_arm64",
     base = "@centos_stream10_linux_amd64",
     tars = [
         "//showcases:showcases_pkg_tar",

@@ -12,10 +12,10 @@ oci.pull(
     name = "centos_stream10",
     digest = "sha256:01858c09da8f130c718c37673b83aaaf65c6493e66f4c674caffcffe9ed4c225",
     image = "quay.io/centos/centos",
-    platforms = ["linux/amd64"],
+    platforms = ["linux/amd64", "linux/arm64"],
     tag = "stream10",
 )
-use_repo(oci, "centos_stream10", "centos_stream10_linux_amd64")
+use_repo(oci, "centos_stream10", "centos_stream10_linux_amd64", "centos_stream10_linux_arm64")
 use_repo(oci, "ubuntu_22_04", "ubuntu_22_04_linux_amd64")
 
 http_file = use_repo_rule("@bazel_tools//tools/build_defs/repo:http.bzl", "http_file")
