@@ -12,6 +12,7 @@
 # *******************************************************************************
 name: AutoSD - Build & Integration Test
 on:
+  workflow_dispatch:
   pull_request:
     types: [opened, reopened, synchronize]
   merge_group:
