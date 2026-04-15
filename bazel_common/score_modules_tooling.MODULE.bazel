@@ -17,14 +17,14 @@
 bazel_dep(name = "score_crates")
 git_override(
     module_name = "score_crates",
-    commit = "372438042bafe21146899dc1f89771a031d12ed0",
+    commit = "90539da0fd3e7e23e01f2b4de1679f7dfadd3b6b",
     remote = "https://github.com/eclipse-score/score-crates.git",
 )
 
 bazel_dep(name = "score_itf")
 git_override(
     module_name = "score_itf",
-    commit = "e1243f3818fd78b72f79741082016fd3d7c85329",
+    commit = "1276f1818f926e2eb9cf234b61ff51d0c1da1e30",
     remote = "https://github.com/eclipse-score/itf.git",
 )
 
@@ -45,7 +45,7 @@ git_override(
 bazel_dep(name = "score_bazel_platforms")
 git_override(
     module_name = "score_bazel_platforms",
-    commit = "2286de89c35d5660ad183906a6f010b33fcac8db",
+    commit = "b72a5c3510ca423efc71fef9a93d82f974b089a4",
     remote = "https://github.com/eclipse-score/bazel_platforms.git",
 )
 

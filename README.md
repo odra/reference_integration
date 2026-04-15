@@ -71,7 +71,7 @@ bazel run //:docs_combo_experimental
 - [Elektrobit corbos Linux for Safety Applications](./images/ebclfsa_aarch64/README.md)
 - Linux x86_64
 
-## Workspace support
+## Workspace support 
 
 You can obtain a complete S-CORE workspace, i.e. a git checkout of all modules from `known_good.json`, on the specific branches / commits, integrated into one Bazel build.
 This helps with cross-module development, debugging, and generally "trying out things".
@@ -171,3 +171,8 @@ local_path_override(module_name = "score_tooling", path = "../tooling")
 ### Rust
 
 Use `scripts/generate_rust_analyzer_support.sh` to generate rust_analyzer settings that will let VS Code work.
+
+## Internal tooling
+
+Internal tooling scripts are currently under development to provide user single point of interaction with all
+created goods. More detailed readme can be found in scripts: [Tooling README](scripts/tooling/README.md)

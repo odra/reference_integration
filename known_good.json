@@ -84,7 +84,7 @@
             },
             "score_lifecycle_health": {
                 "repo": "https://github.com/eclipse-score/lifecycle.git",
-                "hash": "14ee704eeac03e03ca10bece5de8b694d3c5e2dd",
+                "hash": "757d17d4968ae3aebf6cd6981f8aeb875653a592",
                 "metadata": {
                     "code_root_path": "//src/..."
                 }
@@ -114,11 +114,11 @@
         "tooling": {
             "score_crates": {
                 "repo": "https://github.com/eclipse-score/score-crates.git",
-                "hash": "372438042bafe21146899dc1f89771a031d12ed0"
+                "hash": "90539da0fd3e7e23e01f2b4de1679f7dfadd3b6b"
             },
             "score_itf": {
                 "repo": "https://github.com/eclipse-score/itf.git",
-                "hash": "e1243f3818fd78b72f79741082016fd3d7c85329"
+                "hash": "1276f1818f926e2eb9cf234b61ff51d0c1da1e30"
             },
             "score_tooling": {
                 "repo": "https://github.com/eclipse-score/tooling.git",
@@ -130,7 +130,7 @@
             },
             "score_bazel_platforms": {
                 "repo": "https://github.com/eclipse-score/bazel_platforms.git",
-                "hash": "2286de89c35d5660ad183906a6f010b33fcac8db"
+                "hash": "b72a5c3510ca423efc71fef9a93d82f974b089a4"
             },
             "score_test_scenarios": {
                 "repo": "https://github.com/eclipse-score/testing_tools.git",

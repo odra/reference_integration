@@ -30,6 +30,8 @@ on:
 concurrency:
   group: ${{ github.workflow }}-${{ github.event.pull_request.number }}
   cancel-in-progress: ${{ github.ref_name != 'main' && !startsWith(github.ref_name, 'release/') }}
+env:
+  GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 jobs:
   test_and_docs:
     runs-on: ubuntu-22.04
@@ -66,6 +68,9 @@ jobs:
       - name: Execute Unit Tests with Coverage Analysis
         run: |
           python ./scripts/quality_runners.py
+      - name: Execute Feature Integration Tests
+        run: |
+          bazel test //feature_integration_tests/test_cases:fit
       - name: Publish build summary
         if: always()
         run: |
@@ -111,6 +116,8 @@ jobs:
               --github_user=${{ github.repository_owner }} \
               --github_repo=${{ github.event.repository.name }}
 
+          CURRENT=$(realpath .)
+          bazel run //scripts/tooling -- misc html_report --output ${CURRENT}/_build/status_dashboard.html
           tar -cf github-pages.tar _build
       - name: Upload documentation artifact
         uses: actions/upload-artifact@v4.4.0
