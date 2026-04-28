@@ -43,6 +43,13 @@ gcc.toolchain(
     target_os = "linux",
     use_default_package = True,
 )
+gcc.toolchain(
+    name = "score_autosd10_aarch64_toolchain",
+    runtime_ecosystem = "autosd10",
+    target_cpu = "aarch64",
+    target_os = "linux",
+    use_default_package = True,
+)
 
 bazel_dep(name = "os_autosd_toolchain", version = "0.0.1")
 
@@ -58,11 +65,12 @@ autosd_10_gcc = use_extension("@os_autosd_toolchain//autosd_10_gcc:extensions.bz
 use_repo(autosd_10_gcc, "autosd_10_gcc_repo")
 
 # Register the RPM toolchain
-rpm_toolchain = use_extension("@rules_rpm//toolchain:extensions.bzl", "rpm_toolchain")
-use_repo(rpm_toolchain, "rpm_toolchain")
+# rpm_toolchain = use_extension("@rules_rpm//toolchain:extensions.bzl", "rpm_toolchain")
+# use_repo(rpm_toolchain, "rpm_toolchain")
 
 use_repo(
     gcc,
+    "score_autosd10_aarch64_toolchain",
     "score_autosd10_x86_64_toolchain",
     "score_ebclfsa_toolchain",
     "score_gcc_x86_64_toolchain",

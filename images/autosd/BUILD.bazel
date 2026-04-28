@@ -12,18 +12,18 @@ load("@rules_oci//oci:defs.bzl", "oci_image", "oci_load")
 #
 # SPDX-License-Identifier: Apache-2.0
 # *******************************************************************************
-load("@rules_rpm//:defs.bzl", "rpm_package")
+# load("@rules_rpm//:defs.bzl", "rpm_package")
 
-rpm_package(
-    name = "score-showcases",
-    data = [
-        "//showcases",
-    ],
-    data_dir = "/usr/share/score/examples",
-    description = "Eclipse S-CORE Reference Integration Showcases",
-    summary = "Eclipse S-CORE Reference Integration Showcases",
-    version = "0.6.0",
-)
+# rpm_package(
+#     name = "score-showcases",
+#     data = [
+#         "//showcases",
+#     ],
+#     data_dir = "/usr/share/score/examples",
+#     description = "Eclipse S-CORE Reference Integration Showcases",
+#     summary = "Eclipse S-CORE Reference Integration Showcases",
+#     version = "0.6.0",
+# )
 
 sh_binary(
     name = "run",
@@ -39,9 +39,25 @@ sh_binary(
     },
 )
 
+alias(
+  name = "image",
+  actual = select({
+    "@platforms//cpu:x86_64": ":image_amd64",
+    "@platforms//cpu:arm64": ":image_arm64",
+  }),
+)
+
 oci_image(
-    name = "image",
-    base = "@centos_stream10_linux_amd64",
+    name = "image_amd64",
+    base = "@eclipse_autosd10_qemu_amd64",
+    tars = [
+        "//showcases:showcases_pkg_tar",
+    ],
+)
+
+oci_image(
+    name = "image_arm64",
+    base = "@eclipse_autosd10_qemu_arm64",
     tars = [
         "//showcases:showcases_pkg_tar",
     ],
