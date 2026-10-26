@@ -12,6 +12,10 @@
 # *******************************************************************************
 name: AutoSD - Build & Integration Test
 on:
+  workflow_dispatch:
+  schedule:
+    # Nightly at 02:00 UTC
+    - cron: '0 2 * * *'
   pull_request:
     types: [opened, reopened, synchronize]
   merge_group:
@@ -19,6 +23,8 @@ on:
   push:
     branches:
       - main
+    tags:
+      - 'v*'
 # Do not flood CI with unneeded previous runs in PR
 concurrency:
   group: ${{ github.workflow }}-${{ github.event.pull_request.number }}
@@ -115,3 +121,55 @@ jobs:
         working-directory: ./images/autosd
         env:
           SSH_PASSWORD: password
+      - name: Archive Modified Image
+        run: |
+          xz disk.qcow2
+          mv disk.qcow2.xz eclipse-autosd-bootc-qemu-${{ matrix.platform }}.qcow2.xz
+        working-directory: ./images/autosd
+      - name: Store Image
+        uses: actions/upload-artifact@v4
+        with:
+          name: eclipse-autosd-bootc-qemu-${{ matrix.platform }}.qcow2.xz
+          path: images/autosd/eclipse-autosd-bootc-qemu-${{ matrix.platform }}.qcow2.xz
+
+  release:
+    name: Publish to rolling release
+    needs: build
+    if: >
+      github.event_name == 'workflow_dispatch' ||
+      (github.event_name == 'schedule' && github.ref_name == 'main') ||
+      (github.event_name == 'push' && (github.ref_name == 'main' || github.ref_type == 'tag'))
+    runs-on: ubuntu-24.04
+    permissions:
+      contents: write
+    steps:
+      - name: Determine release name
+        run: |
+          if [ "${{ github.ref_type }}" = "tag" ]; then
+            echo "RELEASE_NAME=${{ github.ref_name }}" >> "$GITHUB_ENV"
+          else
+            echo "RELEASE_NAME=rolling" >> "$GITHUB_ENV"
+          fi
+      - name: Checkout repository
+        uses: actions/checkout@v4
+      - name: Download archived image artifact
+        uses: actions/download-artifact@v4
+        with:
+          name: eclipse-autosd-bootc-qemu-x86_64.qcow2.xz
+          path: ./release-assets
+      - name: Ensure release exists
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          if ! gh release view "$RELEASE_NAME" >/dev/null 2>&1; then
+            gh release create "$RELEASE_NAME" \
+              --title "$RELEASE_NAME" \
+              --notes "Release $RELEASE_NAME of Eclipse S-CORE Reference Integration"
+          fi
+      - name: Upload image to release
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          gh release upload "$RELEASE_NAME" \
+            ./release-assets/eclipse-autosd-bootc-qemu-x86_64.qcow2.xz \
+            --clobber
