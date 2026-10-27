@@ -1,0 +1,62 @@
+# *******************************************************************************
+# Copyright (c) 2025 Contributors to the Eclipse Foundation
+#
+# See the NOTICE file(s) distributed with this work for additional
+# information regarding copyright ownership.
+#
+# This program and the accompanying materials are made available under the
+# terms of the Apache License Version 2.0 which is available at
+# https://www.apache.org/licenses/LICENSE-2.0
+#
+# SPDX-License-Identifier: Apache-2.0
+# *******************************************************************************
+name: Release
+on:
+  workflow_dispatch:
+  schedule:
+    # Nightly at 02:00 UTC
+    - cron: '0 2 * * *'
+  push:
+    tags:
+      - 'v*'
+jobs:
+  build_autosd:
+    uses: ./.github/workflows/build_and_test_autosd.yml
+
+  release:
+    name: Create Release and Publish Artifacts
+    needs: [build_autosd]
+    if: >
+      github.event_name == 'workflow_dispatch' ||
+      (github.event_name == 'schedule' && github.ref_name == 'main') ||
+      (github.event_name == 'push' && github.ref_type == 'tag')
+    runs-on: ubuntu-24.04
+    permissions:
+      contents: write
+    steps:
+      - name: Determine release name
+        run: |
+          if [ "${{ github.ref_type }}" = "tag" ]; then
+            echo "RELEASE_NAME=${{ github.ref_name }}" >> "$GITHUB_ENV"
+          else
+            echo "RELEASE_NAME=rolling" >> "$GITHUB_ENV"
+          fi
+      - name: Download all build artifacts
+        uses: actions/download-artifact@v4
+        with:
+          path: ./release-assets
+          merge-multiple: true
+      - name: Ensure release exists
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          if ! gh release view "$RELEASE_NAME" >/dev/null 2>&1; then
+            gh release create "$RELEASE_NAME" \
+              --title "$RELEASE_NAME" \
+              --notes "Release $RELEASE_NAME of Eclipse S-CORE Reference Integration"
+          fi
+      - name: Upload images to release
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          gh release upload "$RELEASE_NAME" ./release-assets/* --clobber
